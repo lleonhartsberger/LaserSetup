@@ -53,15 +53,18 @@ int main( int argc, char* argv[] )
 	TApplication cApp( "Root Application", &argc, argv );
 	if ( batchMode ) gROOT->SetBatch( true );
 	TQObject::Connect( "TCanvas", "Closed()", "TApplication", &cApp, "Terminate()" );
-	TCanvas *d = new TCanvas("h","h",1);
 	
+	TCanvas *d = new TCanvas("h","tune value",1);
+	TGraphErrors *gr= new TGraphErrors();
 	std::vector<std::string> filevec;
 	std::vector<int> color_filevec;
+	std::vector<double> tune_value,mean_value;
 	std::ifstream infile;
 	std::ofstream outfile;
 	
-	infile.open("/home/johannes_grossmann/dissertation/2015/laser_setup/Messungen/PowerMeterData/files.csv");// file containing numbers in 3 columns 
-	outfile.open("/home/johannes_grossmann/dissertation/2015/laser_setup/Messungen/PowerMeterData/results.csv");// file containing numbers in 3 columns 
+	
+	infile.open("/home/siolicon/Lasersetup/Messungen/files.csv");// file containing numbers in 3 columns 
+	outfile.open("/home/siolicon/Lasersetup/Messungen/results.csv");// file containing numbers in 3 columns 
 	
 	if(infile.fail()) // checks to see if file opended 
 	{ 
@@ -71,19 +74,21 @@ int main( int argc, char* argv[] )
 	if(outfile.fail()) // checks to see if file opended 
 	{ 
 		std::cout << "error" << std::endl; 
-		return 1; // no point continuing if the file didn't open...
+		return 1; // no point continuing if the file didn't open...e
 	}
-	outfile<<"Name\tType\tOperator\tOverall percentage of:\tDefective strips\tNo Contact\tOverflow\tSum Current\tMean Current\tDifference\tLeakyStrips\tNullStrips\tOverflow"<<std::endl;
 	
 	
 	while(!infile.eof()) // reads file to end of *file*, not line
 	{ 
 		std::string a, b, c;
 		int color;
+		double tune;
 		
-		infile >> a >> b>> c>>color; // read first column number
+		infile >> a >> b>> tune>>color; // read first column number
 		filevec.push_back(a);
 		color_filevec.push_back(color);
+		tune_value.push_back(tune);
+		
 		std::printf("%s\t%s\t%s\t%d\n", a.c_str(), b.c_str(), c.c_str(), color);
 	}
 	infile.close(); 
@@ -92,19 +97,21 @@ int main( int argc, char* argv[] )
 	for(int i=0; i<filevec.size()-1; i++)
 		//  	for(int i=0; i<5; i++)
 	{
-		std::cout<<"processing"<<filevec.at(i) <<std::endl;
-		SINGLEMEAS::SingleMeas meas(filevec.at(i));
-		meas.Initialise();
-		meas.ReadFile();
-		meas.Fill();
-		meas.Analysis();
- 		meas.SaveResults(*d,outfile);
-		meas.Clean();
+ 		std::cout<<"processing"<<filevec.at(i) <<std::endl;
+ 		SINGLEMEAS::SingleMeas meas(filevec.at(i));
+ 		meas.Initialise();
+ 		meas.ReadFile();
+ 		meas.Fill();
+ 		meas.Analysis();
+		mean_value.push_back(meas.GetMean());
+		std::cout<<"mean measurement"<<meas.GetMean()<<std::endl;
+  		meas.SaveResults(*d,outfile);
+ 		meas.Clean();
 // 		
-		TString tmp = filevec.at(i)+".pdf";
-		TString tmp1 = filevec.at(i)+".eps";
-		d->SaveAs(tmp);
-		d->SaveAs(tmp1);
+// 		TString tmp = filevec.at(i)+".pdf";
+// 		TString tmp1 = filevec.at(i)+".eps";
+// 		d->SaveAs(tmp);
+// 		d->SaveAs(tmp1);
 // 		d->Clear();
 // 		f.Clear();
 // 		h.Clear();
@@ -117,6 +124,22 @@ int main( int argc, char* argv[] )
 	{
 		std::cout<<filevec.at(i)<<std::endl;
 	}
+	for(int i=0; i<mean_value.size(); i++)
+	{
+	  gr->SetPoint(i, tune_value.at(i), mean_value.at(i));
+	}
+	d->SetFillColor(0);
+	d->SetGrid();
+	gr->SetLineColor(1);
+	gr->SetLineWidth(1);
+	gr->SetMarkerColor(4);
+	gr->SetMarkerStyle(21);
+	gr->GetXaxis()->SetTitle("Frequenz [Hz]");
+	gr->GetYaxis()->SetTitle("Current [A]");
+
+	gr->Draw("a*"); 				// l for connecting points with lines
+
+	
 	outfile.close();
 // 	d->Close();
 	std::cout<<"the end"<<std::endl;

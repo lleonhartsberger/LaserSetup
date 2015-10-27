@@ -102,6 +102,7 @@ namespace SINGLEMEAS
 		void SaveResults(TCanvas &canvas, std::ofstream &resultfile);
 		void Fill();
 		void Analysis();
+		double GetMean();
 		
 		double Freedman_Diaconis(double* data, const int datasize);
 		double Sturge(double* data, const int datasize);

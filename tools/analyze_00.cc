@@ -751,3 +751,9 @@ void SINGLEMEAS::SingleMeas::Clean()
 	
 	std::cout<<"deleted"<<std::endl;
 }
+double SINGLEMEAS::SingleMeas::GetMean()
+{
+	cout<<"Mittelwert "<<fTH1Map["I_Diode_ADC_binned_5E-03A"]->GetMean()<<endl;
+	return fTH1Map["I_Diode_ADC_binned_5E-03A"]->GetMean();
+}
+
